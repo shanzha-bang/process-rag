@@ -1,0 +1,7 @@
+# 把环境文件排除掉，别传上去
+.venv/
+.env
+
+# Python 的缓存
+__pycache__/
+*.pyc
