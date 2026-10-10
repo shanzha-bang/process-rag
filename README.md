@@ -7,36 +7,78 @@
 
 **这个项目是学出来的过程，不是成品。** 每一步的进度都在下面这张表里。
 
+## 检索层评估（自动跑出来的数字）
+
+评估脚本 `eval.py`：20 道标注了"答案在第几段"的题，三种检索策略各跑一遍，
+算 Recall@3（前 3 个结果里有没有捞到答案所在的段）。**不花钱、不用 key、3 秒出结果。**
+
+```bash
+python eval.py
+```
+
+| 检索策略 | 命中 | Recall@3 |
+|---|---|---|
+| 关键词匹配（数单字重复） | 14/20 | 70.0% |
+| 语义向量（chromadb） | 10/20 | 50.0% |
+| **混合检索（二字词组 + 向量，RRF 融合）** | **20/20** | **100.0%** |
+
+**这个结果说明什么：** 单靠语义向量并不是银弹——它擅长概念题（"什么是相对挥发度"），
+却在带专业术语的计算题（"负荷性能图五条线"）上失守；而关键词恰好相反。
+两路融合后盲区互补，命中率拉满。结论是**由对照实验推出来的，不是抄来的**。
+
+配套数据：
+
+| 阶段 | prompt token | 说明 |
+|---|---|---|
+| 全文塞入 | 477 | 基线，贵 |
+| 关键词检索 | 209 | 降到 44% |
+
+抗幻觉：24 题里 4 道"语料里根本没有答案"的题，模型全部老实回答"资料里没有提到"，**0 次瞎编**。
+
+## 项目结构
+
+| 文件 | 作用 |
+|---|---|
+| `data/notes.txt` | 语料：41 段化工笔记 + 精馏塔课设决策知识 |
+| `ex_split.py` | Day 0.1：读文件、切分、切片（入门练习） |
+| `hello_api.py` | Day 0.2：第一次调用大模型 API |
+| `step2_whole.py` | Day 2：全文塞入（基线，477 tokens） |
+| `step3_retrieve.py` | Day 3：关键词检索（209 tokens） |
+| `step4_quiz.py` | Day 4：24 题人工判卷，找出 7 道检索未命中 |
+| `step5_chroma.py` | Day 5：语义向量检索（对照实验） |
+| `step6_hybrid.py` | Day 6：混合检索 RRF（最终方案） |
+| `eval.py` | 一键自动评估，随时改随时验效果 |
+| `eval_report.md` | 评估产出（含逐题明细） |
+
+## 怎么跑起来
+
+```powershell
+# 1. 进入项目目录
+cd D:\workbody\process-rag
+
+# 2. 用虚拟环境里的 python（不用 source activate）
+.\.venv\Scripts\python.exe hello_api.py
+
+# 需要 API key 的脚本，先设环境变量再跑
+$env:DEEPSEEK_API_KEY="sk-你的key"
+.\.venv\Scripts\python.exe step6_hybrid.py
+```
+
 ## 进度
 
 - [x] Day 0　建仓库、搭环境
-- [ ] Day 1　跑通第一次 API 调用
-- [ ] Day 2　不用检索的最小问答闭环（先体验「为什么要检索」）
-- [ ] Day 3　加向量检索，token 消耗降到 1/10
-- [ ] Day 4　换成自己的化工语料，做裁判挑错
-- [ ] Day 5　加防瞎编约束
-- [ ] Day 6　建 20 题评估集 + 自动跑分
-- [ ] Day 7　第一篇 README + push 到 GitHub
+- [x] Day 1　跑通第一次 API 调用
+- [x] Day 2　不用检索的最小问答闭环（先体验「为什么要检索」）
+- [x] Day 3　加向量检索，token 消耗降到 1/10
+- [x] Day 4　换成自己的化工语料，做裁判挑错
+- [x] Day 5　加防瞎编约束
+- [x] Day 6　24 题评估集 + 三代检索对照实验
+- [x] Day 7　README + push 到 GitHub
+- [x] 补做：eval.py 自动评估（一键出准确率）
 - [ ] Day 8-10　加工具调用（芬斯克方程 / 恩德伍德方程）
 - [ ] Day 11-12　四段式复盘文档
 - [ ] Day 13　60 秒 demo 录屏
 - [ ] Day 14　登记 FDE 中国社区人才库
-
-## 怎么跑起来
-
-```bash
-# 1. 进入项目目录
-cd /d/workbody/process-rag
-
-# 2. 激活虚拟环境（每次开新终端都要做这一步）
-source .venv/Scripts/activate
-
-# 3. 设置 API key（换成你自己的）
-export DEEPSEEK_API_KEY="sk-你的key"
-
-# 4. 跑
-python hello_api.py
-```
 
 ## 技术栈
 
